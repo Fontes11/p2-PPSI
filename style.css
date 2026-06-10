@@ -6,11 +6,11 @@
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
 :root {
-  --ink:     #1A1A2E;
+  --ink:     #0D0D0D;
   --surface: #F7F5F0;
   --card:    #FFFFFF;
-  --accent:  #C8833A;
-  --accent2: #4A7C8E;
+  --accent:  #FFC700;
+  --accent2: #B8860B;
   --muted:   #8A8A9A;
   --border:  #E4E2DC;
   --danger:  #C0392B;
@@ -64,7 +64,8 @@ body {
 }
 .nav-btn:hover { background: rgba(255,255,255,.1); color: #fff; }
 .btn-register-hdr {
-  background: var(--accent); color: #fff !important;
+  background: var(--accent); color: var(--ink) !important;
+  font-weight: 600;
   border-radius: 7px;
 }
 .btn-register-hdr:hover { opacity: .9; background: var(--accent) !important; }
@@ -85,7 +86,7 @@ body {
 }
 .hero::before {
   content: ''; position: absolute; inset: 0;
-  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(200,131,58,.18) 0%, transparent 70%);
+  background: radial-gradient(ellipse 80% 60% at 50% 0%, rgba(255,199,0,.18) 0%, transparent 70%);
   pointer-events: none;
 }
 .hero h2 {
@@ -187,7 +188,7 @@ body {
 }
 .product-price {
   font-family: var(--font-d); font-size: 1.18rem;
-  font-weight: 700; color: var(--accent);
+  font-weight: 700; color: var(--accent2);
 }
 
 /* Skeletons */
@@ -225,7 +226,7 @@ body {
 }
 .produto-preco {
   font-family: var(--font-d); font-size: 1.6rem;
-  font-weight: 700; color: var(--accent); margin-bottom: 16px;
+  font-weight: 700; color: var(--accent2); margin-bottom: 16px;
 }
 .produto-desc { color: var(--muted); line-height: 1.7; flex: 1; margin-bottom: 24px; }
 
@@ -245,7 +246,7 @@ body {
 }
 .auth-card .subtitle { color: var(--muted); font-size: .88rem; margin-bottom: 28px; }
 .auth-switch { margin-top: 18px; text-align: center; font-size: .87rem; color: var(--muted); }
-.auth-switch a { color: var(--accent); cursor: pointer; font-weight: 500; }
+.auth-switch a { color: var(--accent2); cursor: pointer; font-weight: 500; }
 .auth-switch a:hover { text-decoration: underline; }
 
 /* ── FORM ELEMENTS ──────────────────────────── */
@@ -264,7 +265,7 @@ body {
 }
 .fg input:focus, .fg select:focus, .fg textarea:focus {
   border-color: var(--accent);
-  box-shadow: 0 0 0 3px rgba(200,131,58,.12);
+  box-shadow: 0 0 0 3px rgba(255,199,0,.18);
   background: #fff;
 }
 .fg textarea { resize: vertical; min-height: 88px; }
@@ -291,7 +292,7 @@ body {
 .btn:active { transform: scale(.98); }
 .btn-primary  { background: var(--ink); color: #fff; width: 100%; }
 .btn-primary:hover { opacity: .87; }
-.btn-accent   { background: var(--accent); color: #fff; }
+.btn-accent   { background: var(--accent); color: var(--ink); font-weight: 600; }
 .btn-accent:hover { opacity: .9; }
 .btn-outline  { background: transparent; color: var(--ink); border: 1.5px solid var(--border); }
 .btn-outline:hover { border-color: var(--ink); }
@@ -323,7 +324,7 @@ th {
 }
 tr:last-child td { border-bottom: none; }
 tr:hover td { background: rgba(247,245,240,.5); }
-tr.self-row > td { background: rgba(200,131,58,.04); }
+tr.self-row > td { background: rgba(255,199,0,.08); }
 
 .row-actions { display: flex; gap: 8px; }
 
@@ -333,8 +334,8 @@ tr.self-row > td { background: rgba(200,131,58,.04); }
   border-radius: 99px; font-size: .72rem;
   font-weight: 600; font-family: var(--font-m);
 }
-.badge-teal  { background: rgba(74,124,142,.12); color: var(--accent2); }
-.badge-amber { background: rgba(200,131,58,.12); color: var(--accent); }
+.badge-teal  { background: rgba(13,13,13,.06); color: var(--ink); }
+.badge-amber { background: rgba(184,134,11,.14); color: var(--accent2); }
 
 /* ── USER AVATAR SMALL ──────────────────────── */
 .user-avatar-sm {
