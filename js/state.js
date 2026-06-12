@@ -1,35 +1,35 @@
-export const State = {
-  page: 'home',
-  user: null,
+export const Estado = {
+  pagina: 'inicio',
+  usuario: null,
   token: null,
-  selectedProductId: null,
-  users:    JSON.parse(localStorage.getItem('vt_users')    || '[]'),
-  products: [],
+  idProdutoSelecionado: null,
+  usuarios:    JSON.parse(localStorage.getItem('vt_usuarios')    || '[]'),
+  produtos: [],
 
-  saveUsers() { localStorage.setItem('vt_users', JSON.stringify(this.users)); },
+  salvarUsuarios() { localStorage.setItem('vt_usuarios', JSON.stringify(this.usuarios)); },
 
-  login(u, token = null) {
-    this.user = u;
+  entrar(u, token = null) {
+    this.usuario = u;
     this.token = token;
-    sessionStorage.setItem('vt_session', JSON.stringify({ user: u, token }));
+    sessionStorage.setItem('vt_sessao', JSON.stringify({ usuario: u, token }));
   },
-  logout() {
-    this.user = null;
+  sair() {
+    this.usuario = null;
     this.token = null;
-    sessionStorage.removeItem('vt_session');
+    sessionStorage.removeItem('vt_sessao');
   },
-  restore() {
-    const s = sessionStorage.getItem('vt_session');
+  restaurar() {
+    const s = sessionStorage.getItem('vt_sessao');
     if (!s) return;
-    const data = JSON.parse(s);
-    if (data && data.user) {
-      this.user  = data.user;
-      this.token = data.token || null;
+    const dados = JSON.parse(s);
+    if (dados && dados.usuario) {
+      this.usuario = dados.usuario;
+      this.token = dados.token || null;
     } else {
-      this.user = data;
+      this.usuario = dados;
     }
   },
-  isAdmin() {
-    return this.user?.role === 'admin' || this.user?.tipo === 'admin' || this.user?.papel === 'administrador';
+  ehAdmin() {
+    return this.usuario?.role === 'admin' || this.usuario?.tipo === 'admin' || this.usuario?.papel === 'administrador';
   },
 };

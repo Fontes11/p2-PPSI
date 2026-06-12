@@ -1,184 +1,184 @@
-import { State } from './state.js';
-import { toast, sleep } from './utils.js';
-import { apiFetch } from './api.js';
+import { Estado } from './state.js';
+import { notificar, esperar } from './utils.js';
+import { buscarApi } from './api.js';
 
-import { pageHome, loadProducts, renderProducts } from './pages/home.js';
-import { pageProduto } from './pages/produto.js';
-import { pageLogin } from './pages/login.js';
-import { pageRegister } from './pages/register.js';
-import { pageAdminProdutos, loadProdTable } from './pages/admin-produtos.js';
-import { pageAdminUsuarios, loadUserTable } from './pages/admin-usuarios.js';
+import { paginaInicial, carregarProdutos, renderizarProdutos } from './pages/home.js';
+import { paginaProduto } from './pages/produto.js';
+import { paginaLogin } from './pages/login.js';
+import { paginaCadastro } from './pages/register.js';
+import { paginaAdminProdutos, carregarTabelaProdutos } from './pages/admin-produtos.js';
+import { paginaAdminUsuarios, carregarTabelaUsuarios } from './pages/admin-usuarios.js';
 
-export function go(page, push = true) {
-  State.page = page;
-  if (push) {
+export function navegar(pagina, empilhar = true) {
+  Estado.pagina = pagina;
+  if (empilhar) {
     history.pushState(
-      { page, selectedProductId: State.selectedProductId },
+      { pagina, idProdutoSelecionado: Estado.idProdutoSelecionado },
       '',
-      `#${page}`
+      `#${pagina}`
     );
   }
-  render();
+  renderizar();
 }
 
-export function render() {
-  const app = document.getElementById('app');
-  app.innerHTML = buildHeader() + buildPage() + buildFooter();
-  wire();
+export function renderizar() {
+  const app = document.getElementById('aplicativo');
+  app.innerHTML = construirCabecalho() + construirPagina() + construirRodape();
+  conectar();
 }
 
 window.addEventListener('popstate', e => {
-  const s = e.state || { page: 'home', selectedProductId: null };
-  State.page = s.page;
-  State.selectedProductId = s.selectedProductId ?? null;
-  render();
+  const s = e.state || { pagina: 'inicio', idProdutoSelecionado: null };
+  Estado.pagina = s.pagina;
+  Estado.idProdutoSelecionado = s.idProdutoSelecionado ?? null;
+  renderizar();
 });
 
-function buildHeader() {
-  const loggedIn = !!State.user;
-  const admin    = State.isAdmin();
+function construirCabecalho() {
+  const logado = !!Estado.usuario;
+  const admin  = Estado.ehAdmin();
   return `
-  <header class="site-header">
-    <div class="container header-inner">
-      <div class="logo" data-nav="home">E-<span>Compras</span></div>
-      <nav class="nav-actions">
-        <button class="nav-btn" data-nav="home">Loja</button>
-        ${loggedIn ? `
-          ${admin ? `<button class="nav-btn" data-nav="admin-produtos">Produtos</button>
-                     <button class="nav-btn" data-nav="admin-usuarios">Usuários</button>` : ''}
-          <button class="nav-btn" id="hdr-logout">Sair</button>
+  <header class="cabecalho-site">
+    <div class="conteiner interior-cabecalho">
+      <div class="logo" data-nav="inicio">E-<span>Compras</span></div>
+      <nav class="acoes-nav">
+        <button class="btn-nav" data-nav="inicio">Loja</button>
+        ${logado ? `
+          ${admin ? `<button class="btn-nav" data-nav="admin-produtos">Produtos</button>
+                     <button class="btn-nav" data-nav="admin-usuarios">Usuários</button>` : ''}
+          <button class="btn-nav" id="botao-sair">Sair</button>
         ` : `
-          <button class="nav-btn" data-nav="login">Entrar</button>
-          <button class="nav-btn btn-register-hdr" data-nav="register">Cadastrar</button>
+          <button class="btn-nav" data-nav="acesso">Entrar</button>
+          <button class="btn-nav btn-cadastro-cabecalho" data-nav="cadastro">Cadastrar</button>
         `}
       </nav>
     </div>
   </header>`;
 }
 
-function buildFooter() {
-  return `<footer class="site-footer">© 2026 Gabriel Fontes</footer>`;
+function construirRodape() {
+  return `<footer class="rodape-site">© 2026 Gabriel Fontes</footer>`;
 }
 
-function buildPage() {
-  switch (State.page) {
-    case 'home':           return pageHome();
-    case 'produto':        return pageProduto();
-    case 'login':          return pageLogin();
-    case 'register':       return pageRegister();
+function construirPagina() {
+  switch (Estado.pagina) {
+    case 'inicio':         return paginaInicial();
+    case 'produto':        return paginaProduto();
+    case 'acesso':         return paginaLogin();
+    case 'cadastro':       return paginaCadastro();
     case 'admin-produtos':
-      if (!State.isAdmin()) { go('home', false); return ''; }
-      return pageAdminProdutos();
+      if (!Estado.ehAdmin()) { navegar('inicio', false); return ''; }
+      return paginaAdminProdutos();
     case 'admin-usuarios':
-      if (!State.isAdmin()) { go('home', false); return ''; }
-      return pageAdminUsuarios();
-    default:               return pageHome();
+      if (!Estado.ehAdmin()) { navegar('inicio', false); return ''; }
+      return paginaAdminUsuarios();
+    default:               return paginaInicial();
   }
 }
 
-function wire() {
-  const app = document.getElementById('app');
+function conectar() {
+  const app = document.getElementById('aplicativo');
 
   app.addEventListener('click', e => {
     const nav = e.target.closest('[data-nav]');
-    if (nav) { e.preventDefault(); go(nav.dataset.nav); return; }
+    if (nav) { e.preventDefault(); navegar(nav.dataset.nav); return; }
 
-    const prod = e.target.closest('[data-act="view-prod"]');
-    if (prod) { State.selectedProductId = prod.dataset.id; go('produto'); }
+    const produto = e.target.closest('[data-act="ver-produto"]');
+    if (produto) { Estado.idProdutoSelecionado = produto.dataset.id; navegar('produto'); }
   });
 
-  document.getElementById('hdr-logout')?.addEventListener('click', () => {
-    State.logout(); toast('Até logo!', 'info'); go('home');
+  document.getElementById('botao-sair')?.addEventListener('click', () => {
+    Estado.sair(); notificar('Até logo!', 'info'); navegar('inicio');
   });
 
-  document.getElementById('form-login')?.addEventListener('submit', async e => {
+  document.getElementById('formulario-login')?.addEventListener('submit', async e => {
     e.preventDefault();
-    const btn = document.getElementById('btn-login');
+    const btn = document.getElementById('botao-login');
     const fd  = new FormData(e.target);
     const email = fd.get('email').trim();
     const senha = fd.get('senha');
-    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
-    await sleep(300);
+    btn.innerHTML = '<span class="carregando"></span>'; btn.disabled = true;
+    await esperar(300);
 
-    let apiResp = null;
+    let resp = null;
     try {
-      apiResp = await apiFetch('/entrar', {
+      resp = await buscarApi('/entrar', {
         method: 'POST',
         body: JSON.stringify({ email, senha }),
       });
     } catch {}
 
     // Bootstrap da conta admin/admin no backend, caso ainda não exista nele
-    if (!apiResp?.accessToken && email.toLowerCase() === 'admin' && senha === 'admin') {
+    if (!resp?.accessToken && email.toLowerCase() === 'admin' && senha === 'admin') {
       try {
-        await apiFetch('/cadastrar', {
+        await buscarApi('/cadastrar', {
           method: 'POST',
           body: JSON.stringify({ nome: 'Administrador', email: 'admin', senha: 'admin', papel: 'administrador' }),
         });
-        apiResp = await apiFetch('/entrar', {
+        resp = await buscarApi('/entrar', {
           method: 'POST',
           body: JSON.stringify({ email, senha }),
         });
       } catch {}
     }
 
-    if (apiResp?.accessToken) {
-      State.login(apiResp.user, apiResp.accessToken);
-      toast(`Bem-vindo, ${apiResp.user.nome || apiResp.user.name}! 👋`, 'success');
-      go('home');
+    if (resp?.accessToken) {
+      Estado.entrar(resp.user, resp.accessToken);
+      notificar(`Bem-vindo, ${resp.user.nome || resp.user.name}!`, 'sucesso');
+      navegar('inicio');
       return;
     }
 
-    const localUser = State.users.find(u => u.email?.toLowerCase() === email.toLowerCase() && u.senha === senha);
+    const usuarioLocal = Estado.usuarios.find(u => u.email?.toLowerCase() === email.toLowerCase() && u.senha === senha);
 
-    if (localUser) {
-      State.login(localUser);
-      toast(`Bem-vindo, ${localUser.nome || localUser.name}! 👋`, 'success');
-      go('home');
+    if (usuarioLocal) {
+      Estado.entrar(usuarioLocal);
+      notificar(`Bem-vindo, ${usuarioLocal.nome || usuarioLocal.name}!`, 'sucesso');
+      navegar('inicio');
     } else {
-      toast('E-mail ou senha incorretos.', 'error');
+      notificar('E-mail ou senha incorretos.', 'erro');
       btn.innerHTML = 'Entrar'; btn.disabled = false;
     }
   });
 
-  document.getElementById('form-register')?.addEventListener('submit', async e => {
+  document.getElementById('formulario-cadastro')?.addEventListener('submit', async e => {
     e.preventDefault();
-    const btn = document.getElementById('btn-register');
+    const btn = document.getElementById('botao-cadastro');
     const fd  = new FormData(e.target);
     const nome   = fd.get('nome').trim();
     const email  = fd.get('email').trim().toLowerCase();
     const senha  = fd.get('senha');
     const senha2 = fd.get('senha2');
-    if (senha !== senha2) { toast('As senhas não coincidem.', 'error'); return; }
-    if (State.users.find(u => u.email === email)) { toast('E-mail já cadastrado.', 'error'); return; }
-    btn.innerHTML = '<span class="spinner"></span>'; btn.disabled = true;
-    await sleep(300);
+    if (senha !== senha2) { notificar('As senhas não coincidem.', 'erro'); return; }
+    if (Estado.usuarios.find(u => u.email === email)) { notificar('E-mail já cadastrado.', 'erro'); return; }
+    btn.innerHTML = '<span class="carregando"></span>'; btn.disabled = true;
+    await esperar(300);
 
-    let apiResp = null;
+    let resp = null;
     try {
-      apiResp = await apiFetch('/cadastrar', {
+      resp = await buscarApi('/cadastrar', {
         method: 'POST',
         body: JSON.stringify({ nome, email, senha, papel: 'editor' }),
       });
     } catch {}
 
-    if (apiResp?.accessToken) {
-      State.login(apiResp.user, apiResp.accessToken);
-      toast(`Conta criada! Bem-vindo, ${nome} 🎉`, 'success');
-      go('home');
+    if (resp?.accessToken) {
+      Estado.entrar(resp.user, resp.accessToken);
+      notificar(`Conta criada! Bem-vindo, ${nome}`, 'sucesso');
+      navegar('inicio');
       return;
     }
 
-    const nu = { id: Date.now(), nome, email, senha, role: 'user' };
-    State.users.push(nu); State.saveUsers();
-    State.login(nu);
-    toast(`Conta criada! Bem-vindo, ${nome} 🎉`, 'success');
-    go('home');
+    const novoUsuario = { id: Date.now(), nome, email, senha, role: 'user' };
+    Estado.usuarios.push(novoUsuario); Estado.salvarUsuarios();
+    Estado.entrar(novoUsuario);
+    notificar(`Conta criada! Bem-vindo, ${nome}`, 'sucesso');
+    navegar('inicio');
   });
 
-  document.getElementById('search-input')?.addEventListener('input', renderProducts);
+  document.getElementById('entrada-busca')?.addEventListener('input', renderizarProdutos);
 
-  if (State.page === 'home')           loadProducts();
-  if (State.page === 'admin-produtos') loadProdTable();
-  if (State.page === 'admin-usuarios') loadUserTable();
+  if (Estado.pagina === 'inicio')         carregarProdutos();
+  if (Estado.pagina === 'admin-produtos') carregarTabelaProdutos();
+  if (Estado.pagina === 'admin-usuarios') carregarTabelaUsuarios();
 }

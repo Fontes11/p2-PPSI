@@ -1,17 +1,17 @@
-import { State } from './state.js';
+import { Estado } from './state.js';
 
 export const API = 'https://base-back-dwpz.onrender.com';
 
-export const EP = {
+export const PONTOS = {
   produtos: '/produtos',
   usuarios: '/usuarios',
 };
 
-export async function apiFetch(path, opts = {}) {
-  const headers = { 'Content-Type': 'application/json', ...(opts.headers || {}) };
-  if (State.token) headers.Authorization = `Bearer ${State.token}`;
+export async function buscarApi(caminho, opcoes = {}) {
+  const headers = { 'Content-Type': 'application/json', ...(opcoes.headers || {}) };
+  if (Estado.token) headers.Authorization = `Bearer ${Estado.token}`;
 
-  const res = await fetch(API + path, { ...opts, headers });
+  const res = await fetch(API + caminho, { ...opcoes, headers });
   if (!res.ok) {
     let msg = `Erro ${res.status}`;
     try { const j = await res.json(); msg = j.mensagem || j.message || j.error || msg; } catch {}
@@ -21,27 +21,27 @@ export async function apiFetch(path, opts = {}) {
   return ct.includes('json') ? res.json() : res.text();
 }
 
-let categoriasCache = null;
+let cacheCategorias = null;
 
-export function getCategoriasSync() {
-  return categoriasCache || [];
+export function obterCategoriasSync() {
+  return cacheCategorias || [];
 }
 
-export async function getCategorias() {
-  if (categoriasCache) return categoriasCache;
+export async function obterCategorias() {
+  if (cacheCategorias) return cacheCategorias;
   try {
-    const raw = await apiFetch('/categorias');
-    categoriasCache = normalizeList(raw);
+    const raw = await buscarApi('/categorias');
+    cacheCategorias = normalizarLista(raw);
   } catch {
-    categoriasCache = [];
+    cacheCategorias = [];
   }
-  return categoriasCache;
+  return cacheCategorias;
 }
 
-export function normalizeList(data) {
-  if (Array.isArray(data)) return data;
+export function normalizarLista(dados) {
+  if (Array.isArray(dados)) return dados;
   for (const k of ['data', 'items', 'produtos', 'products', 'usuarios', 'users', 'results']) {
-    if (Array.isArray(data[k])) return data[k];
+    if (Array.isArray(dados[k])) return dados[k];
   }
   return [];
 }

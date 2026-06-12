@@ -1,107 +1,102 @@
-import { State } from '../state.js';
-import { EP, apiFetch, normalizeList, getCategorias } from '../api.js';
-import { fmt, toast } from '../utils.js';
+import { Estado } from '../state.js';
+import { PONTOS, buscarApi, normalizarLista, obterCategorias } from '../api.js';
+import { formatarPreco, notificar } from '../utils.js';
 
 let categorias = [];
 
-export function pageHome() {
+export function paginaInicial() {
   return `
-  <section class="hero">
-    <div class="container">
-      <h2>Descubra produtos <em>incríveis</em></h2>
-      <p>Curadoria selecionada com os melhores preços e qualidade.</p>
+  <section class="banner">
+    <div class="conteiner">
+      <h2>o Melhor <em>E-Comerce</em></h2>
+      <p>Os Melhores Produtos Para você.</p>
     </div>
   </section>
-  <div class="container">
-    <div class="shop-bar">
-      <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input id="search-input" type="text" placeholder="Buscar produtos…" />
+  <div class="conteiner">
+    <div class="barra-loja">
+      <div class="area-busca">
+        <input id="entrada-busca" type="text" placeholder="Buscar produtos…" />
       </div>
     </div>
-    <div class="section-head">
+    <div class="cabecalho-secao">
       <h3>Todos os produtos</h3>
-      <span id="prod-count" class="count"></span>
     </div>
-    <div id="prod-grid">${skeleton(6)}</div>
+    <div id="grade-produtos">${esqueleto(6)}</div>
   </div>`;
 }
 
-function skeleton(n) {
-  return `<div class="products-grid">${Array(n).fill(0).map(() => `
-    <div class="skeleton-card">
-      <div class="sk" style="height:200px;border-radius:12px 12px 0 0"></div>
+function esqueleto(n) {
+  return `<div class="grade-cartoes">${Array(n).fill(0).map(() => `
+    <div class="cartao-esqueleto">
+      <div class="esq" style="height:200px;border-radius:12px 12px 0 0"></div>
       <div style="padding:16px">
-        <div class="sk" style="height:11px;width:55%;margin-bottom:10px"></div>
-        <div class="sk" style="height:19px;margin-bottom:8px"></div>
-        <div class="sk" style="height:13px;margin-bottom:16px"></div>
-        <div class="sk" style="height:32px"></div>
+        <div class="esq" style="height:11px;width:55%;margin-bottom:10px"></div>
+        <div class="esq" style="height:19px;margin-bottom:8px"></div>
+        <div class="esq" style="height:13px;margin-bottom:16px"></div>
+        <div class="esq" style="height:32px"></div>
       </div>
     </div>`).join('')}</div>`;
 }
 
-export async function loadProducts() {
+export async function carregarProdutos() {
   let raw;
   try {
-    raw = await apiFetch(EP.produtos);
+    raw = await buscarApi(PONTOS.produtos);
   } catch {}
 
-  State.products = raw ? normalizeList(raw) : getDemoProducts();
-  if (!raw) toast('Modo demonstração — API não respondeu.', 'info');
-  if (raw) categorias = await getCategorias();
-  renderProducts();
+  Estado.produtos = raw ? normalizarLista(raw) : obterProdutosDemo();
+  if (!raw) notificar('Modo demonstração — API não respondeu.', 'info');
+  if (raw) categorias = await obterCategorias();
+  renderizarProdutos();
 }
 
-export function renderProducts() {
-  const grid  = document.getElementById('prod-grid');
-  const count = document.getElementById('prod-count');
-  if (!grid) return;
+export function renderizarProdutos() {
+  const grade = document.getElementById('grade-produtos');
+  if (!grade) return;
 
-  const q = (document.getElementById('search-input')?.value || '').toLowerCase();
-  const list = q
-    ? State.products.filter(p =>
+  const q = (document.getElementById('entrada-busca')?.value || '').toLowerCase();
+  const lista = q
+    ? Estado.produtos.filter(p =>
         [p.nome, p.name, p.descricao, p.description, p.categoria, p.category]
           .some(v => (v || '').toLowerCase().includes(q)))
-    : State.products;
+    : Estado.produtos;
 
-  if (count) count.textContent = `${list.length} produto${list.length !== 1 ? 's' : ''}`;
-
-  if (!list.length) {
-    grid.innerHTML = `<div class="empty-state"><div class="ei">📦</div><p>Nenhum produto encontrado.</p></div>`;
+  if (!lista.length) {
+    grade.innerHTML = `<div class="estado-vazio"><div class="icone-vazio"></div><p>Nenhum produto encontrado.</p></div>`;
     return;
   }
 
-  grid.innerHTML = `<div class="products-grid">${list.map(prodCard).join('')}</div>`;
+  grade.innerHTML = `<div class="grade-cartoes">${lista.map(cartaoProduto).join('')}</div>`;
 }
 
-function prodCard(p) {
+function cartaoProduto(p) {
   const imgSrc = p.imagemUrl || p.imagem || p.image || p.imageUrl || p.foto || p.img || p.thumbnail || p.picture || '';
   const nome   = p.nome || p.name || 'Produto';
   const desc   = p.descricao || p.description || '';
   const cat    = p.categoriaId != null
     ? (categorias.find(c => String(c.id) === String(p.categoriaId))?.nome || '')
     : (p.categoria || p.category || '');
-  const preco  = fmt(p.preco || p.price || 0);
+  const preco  = formatarPreco(p.preco || p.price || 0);
 
   const imgHtml = imgSrc
     ? `<img src="${imgSrc}" alt="${nome}" loading="lazy"
            onerror="this.style.display='none';this.nextElementSibling.style.display='flex'" />
-       <div class="img-fallback" style="display:none">📦</div>`
-    : `<div class="img-fallback">📦</div>`;
+       <div class="imagem-alternativa" style="display:none"></div>`
+    : `<div class="imagem-alternativa"></div>`;
 
   return `
-  <article class="product-card" data-act="view-prod" data-id="${p.id}">
-    <div class="product-img">${imgHtml}</div>
-    <div class="product-body">
-      ${cat ? `<div class="product-cat">${cat}</div>` : ''}
-      <div class="product-name">${nome}</div>
-      <div class="product-desc">${desc}</div>
-      <div class="product-price">${preco}</div>
+  <article class="cartao-produto" data-act="ver-produto" data-id="${p.id}">
+    <div class="imagem-produto">${imgHtml}</div>
+    <div class="corpo-produto">
+      ${cat ? `<div class="categoria-produto">${cat}</div>` : ''}
+      <div class="nome-produto">${nome}</div>
+      <div class="descricao-produto">${desc}</div>
+      <div class="preco-produto">${preco}</div>
     </div>
   </article>`;
 }
 
-function getDemoProducts() {
+function obterProdutosDemo() {
   return [
     { id:1, nome:'Fone Bluetooth Pro',    descricao:'Cancelamento de ruído ativo, 30h de bateria.',   preco:349.90, categoria:'Eletrônicos', imagem:'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&h=300&fit=crop' },
     { id:2, nome:'Mochila Urban Slim',    descricao:'Compartimento para notebook até 15".',           preco:189.90, categoria:'Acessórios',  imagem:'https://images.unsplash.com/photo-1553062407-98eeb64c6a62?w=400&h=300&fit=crop' },

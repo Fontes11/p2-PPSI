@@ -1,106 +1,112 @@
-import { State } from '../state.js';
-import { EP, apiFetch, normalizeList, getCategorias } from '../api.js';
-import { fmt, toast, loadingSpinner, openOverlay, closeOverlay } from '../utils.js';
-import { uploadImage } from '../storage.js';
+import { Estado } from '../state.js';
+import { PONTOS, buscarApi, normalizarLista, obterCategorias } from '../api.js';
+import { formatarPreco, notificar, spinnerCarregamento, abrirSobreposicao, fecharSobreposicao } from '../utils.js';
+import { enviarImagem } from '../storage.js';
 
 let categorias = [];
 
-export function pageAdminProdutos() {
+export function paginaAdminProdutos() {
   return `
-  <div class="container admin-wrap">
-    <div class="admin-hdr">
+  <div class="conteiner area-admin">
+    <div class="cabecalho-admin">
       <h2>Gerenciar Produtos</h2>
-      <button class="btn btn-accent" id="btn-novo-prod">+ Novo produto</button>
+      <button class="btn btn-destaque" id="botao-novo-produto">+ Novo produto</button>
     </div>
-    <div class="table-wrap">
-      <div id="prod-table">${loadingSpinner()}</div>
+    <div class="area-tabela">
+      <div id="tabela-produtos">${spinnerCarregamento()}</div>
     </div>
   </div>
 
   ${modalProduto()}`;
 }
 
+function marcadorUploadImagem() {
+  return `<div class="marcador-upload-imagem">
+    <span>Clique para selecionar uma imagem</span>
+  </div>`;
+}
+
 function modalProduto() {
   return `
-  <div class="overlay" id="prod-overlay">
-    <div class="modal-box">
-      <div class="modal-hdr">
-        <h3 id="prod-modal-title">Novo Produto</h3>
-        <button class="modal-close" id="prod-modal-close">✕</button>
+  <div class="sobreposicao" id="sobreposicao-produto">
+    <div class="caixa-modal">
+      <div class="cabecalho-modal">
+        <h3 id="titulo-modal-produto">Novo Produto</h3>
+        <button class="fechar-modal" id="fechar-modal-produto">×</button>
       </div>
-      <form id="form-produto">
+      <form id="formulario-produto">
         <input type="hidden" name="id" />
-        <div class="fg"><label>Nome</label>
+        <div class="grupo-campo"><label>Nome</label>
           <input type="text" name="nome" required /></div>
-        <div class="fg"><label>Descrição</label>
+        <div class="grupo-campo"><label>Descrição</label>
           <textarea name="descricao"></textarea></div>
-        <div class="form-row">
-          <div class="fg"><label>Preço (R$)</label>
+        <div class="linha-formulario">
+          <div class="grupo-campo"><label>Preço (R$)</label>
             <input type="number" name="preco" step="0.01" min="0" required /></div>
-          <div class="fg"><label>Estoque</label>
+          <div class="grupo-campo"><label>Estoque</label>
             <input type="number" name="estoque" step="1" min="0" required /></div>
         </div>
-        <div class="fg"><label>Categoria</label>
-          <select name="categoriaId" id="prod-categoria-select"></select>
+        <div class="grupo-campo"><label>Categoria</label>
+          <select name="categoriaId" id="selecao-categoria-produto"></select>
         </div>
-        <div class="fg"><label>Foto do produto</label>
-          <input type="file" id="prod-foto-input" name="foto" accept="image/*" />
+        <div class="grupo-campo"><label>Foto do produto</label>
+          <input type="file" id="entrada-foto-produto" name="foto" accept="image/*" hidden />
           <input type="hidden" name="imagemUrl" />
-          <div id="prod-img-preview" class="img-preview"></div>
+          <div id="previa-imagem-produto" class="previa-imagem caixa-upload-imagem">${marcadorUploadImagem()}</div>
         </div>
-        <div class="modal-actions">
-          <button type="button" class="btn btn-outline" id="prod-modal-cancel">Cancelar</button>
-          <button type="submit" class="btn btn-accent" id="prod-modal-save">Salvar</button>
+        <div class="acoes-modal">
+          <button type="button" class="btn btn-contorno" id="cancelar-modal-produto">Cancelar</button>
+          <button type="submit" class="btn btn-destaque" id="salvar-modal-produto">Salvar</button>
         </div>
       </form>
     </div>
   </div>`;
 }
 
-export async function loadProdTable() {
-  const el = document.getElementById('prod-table');
+export async function carregarTabelaProdutos() {
+  const el = document.getElementById('tabela-produtos');
   if (!el) return;
-  let list = State.products;
-  if (!list.length) {
+  let lista = Estado.produtos;
+  if (!lista.length) {
     try {
-      const raw = await apiFetch(EP.produtos);
-      if (raw) { State.products = normalizeList(raw); list = State.products; }
+      const raw = await buscarApi(PONTOS.produtos);
+      if (raw) { Estado.produtos = normalizarLista(raw); lista = Estado.produtos; }
     } catch {}
-    if (!list.length) { State.products = []; list = []; }
+    if (!lista.length) { Estado.produtos = []; lista = []; }
   }
-  categorias = await getCategorias();
-  el.innerHTML = buildProdTable(list);
-  wireProdTable();
+  categorias = await obterCategorias();
+  el.innerHTML = construirTabelaProdutos(lista);
+  conectarTabelaProdutos();
 }
 
-function categoriaNome(id) {
+function nomeCategoria(id) {
   const c = categorias.find(c => String(c.id) === String(id));
   return c?.nome || '—';
 }
 
-function buildProdTable(list) {
-  if (!list.length) return `<div class="empty-state"><div class="ei">📦</div><p>Sem produtos.</p></div>`;
+function construirTabelaProdutos(lista) {
+  if (!lista.length) return `<div class="estado-vazio"><div class="icone-vazio"></div><p>Sem produtos.</p></div>`;
   return `
   <table>
     <thead><tr>
       <th>ID</th><th>Imagem</th><th>Nome</th><th>Categoria</th><th>Preço</th><th>Ações</th>
     </tr></thead>
     <tbody>
-      ${list.map(p => {
+      ${lista.map(p => {
         const img = p.imagemUrl || p.imagem || p.image || p.imageUrl || p.foto || '';
         const thumb = img
           ? `<img src="${img}" style="width:44px;height:44px;object-fit:cover;border-radius:6px" onerror="this.style.display='none'" />`
-          : '<span style="font-size:1.4rem">📦</span>';
-        const cat = p.categoriaId != null ? categoriaNome(p.categoriaId) : (p.categoria || p.category || '—');
+          : '';
+        const cat = p.categoriaId != null ? nomeCategoria(p.categoriaId) : (p.categoria || p.category || '—');
         return `<tr>
-          <td><span class="badge badge-teal">#${p.id}</span></td>
+          <td><span class="selo selo-azul">#${p.id}</span></td>
           <td>${thumb}</td>
           <td><strong>${p.nome || p.name || '—'}</strong></td>
           <td>${cat}</td>
-          <td>${fmt(p.preco || p.price)}</td>
-          <td><div class="row-actions">
-            <button class="btn btn-sm btn-outline" data-act="edit-prod" data-id="${p.id}">✏ Editar</button>
-            <button class="btn btn-sm btn-danger"  data-act="del-prod"  data-id="${p.id}">✕ Excluir</button>
+          <td>${formatarPreco(p.preco || p.price)}</td>
+          <td><div class="acoes-linha">
+            <button class="btn btn-pequeno btn-contorno" data-act="editar-produto" data-id="${p.id}">Editar</button>
+            <button class="btn btn-pequeno btn-perigo"  data-act="excluir-produto"  data-id="${p.id}">Excluir</button>
           </div></td>
         </tr>`;
       }).join('')}
@@ -108,50 +114,54 @@ function buildProdTable(list) {
   </table>`;
 }
 
-function fillCategoriaSelect(selectedId) {
-  const sel = document.getElementById('prod-categoria-select');
+function preencherSelecaoCategoria(idSelecionado) {
+  const sel = document.getElementById('selecao-categoria-produto');
   if (!sel) return;
   sel.innerHTML = categorias.map(c =>
-    `<option value="${c.id}" ${String(c.id) === String(selectedId) ? 'selected' : ''}>${c.nome}</option>`
+    `<option value="${c.id}" ${String(c.id) === String(idSelecionado) ? 'selected' : ''}>${c.nome}</option>`
   ).join('');
 }
 
-function wireProdTable() {
-  fillCategoriaSelect();
+function conectarTabelaProdutos() {
+  preencherSelecaoCategoria();
 
-  document.getElementById('btn-novo-prod')?.addEventListener('click', () => {
-    const form = document.getElementById('form-produto');
+  document.getElementById('botao-novo-produto')?.addEventListener('click', () => {
+    const form = document.getElementById('formulario-produto');
     form?.reset();
     if (form) { form.id.value = ''; form.imagemUrl.value = ''; }
-    fillCategoriaSelect();
-    document.getElementById('prod-img-preview').innerHTML = '';
-    document.getElementById('prod-modal-title').textContent = 'Novo Produto';
-    openOverlay('prod-overlay');
+    preencherSelecaoCategoria();
+    document.getElementById('previa-imagem-produto').innerHTML = marcadorUploadImagem();
+    document.getElementById('titulo-modal-produto').textContent = 'Novo Produto';
+    abrirSobreposicao('sobreposicao-produto');
   });
 
-  document.getElementById('prod-foto-input')?.addEventListener('change', e => {
-    const file = e.target.files?.[0];
-    const preview = document.getElementById('prod-img-preview');
-    if (!file) { preview.innerHTML = ''; return; }
-    preview.innerHTML = `<img src="${URL.createObjectURL(file)}" alt="Pré-visualização" />`;
+  document.getElementById('previa-imagem-produto')?.addEventListener('click', () => {
+    document.getElementById('entrada-foto-produto')?.click();
   });
 
-  document.getElementById('prod-modal-close')?.addEventListener('click',  () => closeOverlay('prod-overlay'));
-  document.getElementById('prod-modal-cancel')?.addEventListener('click', () => closeOverlay('prod-overlay'));
-  document.getElementById('prod-overlay')?.addEventListener('click', e => {
-    if (e.target.id === 'prod-overlay') closeOverlay('prod-overlay');
+  document.getElementById('entrada-foto-produto')?.addEventListener('change', e => {
+    const arquivo = e.target.files?.[0];
+    const previa = document.getElementById('previa-imagem-produto');
+    if (!arquivo) { previa.innerHTML = marcadorUploadImagem(); return; }
+    previa.innerHTML = `<img src="${URL.createObjectURL(arquivo)}" alt="Pré-visualização" />`;
   });
 
-  document.getElementById('prod-table')?.addEventListener('click', async e => {
+  document.getElementById('fechar-modal-produto')?.addEventListener('click',  () => fecharSobreposicao('sobreposicao-produto'));
+  document.getElementById('cancelar-modal-produto')?.addEventListener('click', () => fecharSobreposicao('sobreposicao-produto'));
+  document.getElementById('sobreposicao-produto')?.addEventListener('click', e => {
+    if (e.target.id === 'sobreposicao-produto') fecharSobreposicao('sobreposicao-produto');
+  });
+
+  document.getElementById('tabela-produtos')?.addEventListener('click', async e => {
     const btn = e.target.closest('[data-act]');
     if (!btn) return;
     const act = btn.dataset.act;
     const id  = btn.dataset.id;
 
-    if (act === 'edit-prod') {
-      const p = State.products.find(x => String(x.id) === String(id));
+    if (act === 'editar-produto') {
+      const p = Estado.produtos.find(x => String(x.id) === String(id));
       if (!p) return;
-      const f = document.getElementById('form-produto');
+      const f = document.getElementById('formulario-produto');
       f.id.value        = p.id;
       f.nome.value      = p.nome || p.name || '';
       f.descricao.value = p.descricao || p.description || '';
@@ -159,41 +169,41 @@ function wireProdTable() {
       f.estoque.value   = p.estoque ?? 0;
       f.imagemUrl.value = p.imagemUrl || p.imagem || p.image || p.imageUrl || '';
       f.foto.value = '';
-      fillCategoriaSelect(p.categoriaId);
-      const preview = document.getElementById('prod-img-preview');
-      preview.innerHTML = f.imagemUrl.value
+      preencherSelecaoCategoria(p.categoriaId);
+      const previa = document.getElementById('previa-imagem-produto');
+      previa.innerHTML = f.imagemUrl.value
         ? `<img src="${f.imagemUrl.value}" alt="Pré-visualização" />`
-        : '';
-      document.getElementById('prod-modal-title').textContent = 'Editar Produto';
-      openOverlay('prod-overlay');
+        : marcadorUploadImagem();
+      document.getElementById('titulo-modal-produto').textContent = 'Editar Produto';
+      abrirSobreposicao('sobreposicao-produto');
     }
 
-    if (act === 'del-prod') {
+    if (act === 'excluir-produto') {
       if (!confirm('Excluir este produto?')) return;
       let ok = false, errMsg = '';
-      try { await apiFetch(`${EP.produtos}/${id}`, { method: 'DELETE' }); ok = true; }
+      try { await buscarApi(`${PONTOS.produtos}/${id}`, { method: 'DELETE' }); ok = true; }
       catch (err) { errMsg = err.message; }
-      State.products = State.products.filter(p => String(p.id) !== String(id));
-      toast(ok ? 'Produto excluído!' : `Excluído localmente (${errMsg || 'falha na API'}).`, ok ? 'success' : 'info');
-      await loadProdTable();
+      Estado.produtos = Estado.produtos.filter(p => String(p.id) !== String(id));
+      notificar(ok ? 'Produto excluído!' : `Excluído localmente (${errMsg || 'falha na API'}).`, ok ? 'sucesso' : 'info');
+      await carregarTabelaProdutos();
     }
   });
 
-  document.getElementById('form-produto')?.addEventListener('submit', async e => {
+  document.getElementById('formulario-produto')?.addEventListener('submit', async e => {
     e.preventDefault();
-    const btn  = document.getElementById('prod-modal-save');
+    const btn  = document.getElementById('salvar-modal-produto');
     const fd   = new FormData(e.target);
     const id   = fd.get('id');
     const foto = fd.get('foto');
 
-    btn.innerHTML = '<span class="spinner"></span> Salvando'; btn.disabled = true;
+    btn.innerHTML = '<span class="carregando"></span> Salvando'; btn.disabled = true;
 
     let imagemUrl = fd.get('imagemUrl') || '';
     if (foto && foto.size > 0) {
       try {
-        imagemUrl = await uploadImage(foto);
+        imagemUrl = await enviarImagem(foto);
       } catch (err) {
-        toast(`Erro no upload: ${err.message}`, 'error');
+        notificar(`Erro no upload: ${err.message}`, 'erro');
         btn.innerHTML = 'Salvar'; btn.disabled = false;
         return;
       }
@@ -212,23 +222,22 @@ function wireProdTable() {
     let errMsg = '';
     try {
       if (id) {
-        await apiFetch(`${EP.produtos}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
+        await buscarApi(`${PONTOS.produtos}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       } else {
-        await apiFetch(EP.produtos, { method: 'POST', body: JSON.stringify(payload) });
+        await buscarApi(PONTOS.produtos, { method: 'POST', body: JSON.stringify(payload) });
       }
       ok = true;
     } catch (err) { errMsg = err.message; }
     if (!ok) {
       if (id) {
-        const idx = State.products.findIndex(p => String(p.id) === String(id));
-        if (idx > -1) State.products[idx] = { ...State.products[idx], ...payload };
+        const idx = Estado.produtos.findIndex(p => String(p.id) === String(id));
+        if (idx > -1) Estado.produtos[idx] = { ...Estado.produtos[idx], ...payload };
       } else {
-        State.products.unshift({ id: Date.now(), ...payload });
+        Estado.produtos.unshift({ id: Date.now(), ...payload });
       }
     }
-    toast(ok ? 'Produto salvo!' : `Salvo localmente (${errMsg || 'falha na API'}).`, ok ? 'success' : 'info');
-    closeOverlay('prod-overlay');
-    await loadProdTable();
+    notificar(ok ? 'Produto salvo!' : `Salvo localmente (${errMsg || 'falha na API'}).`, ok ? 'sucesso' : 'info');
+    fecharSobreposicao('sobreposicao-produto');
+    await carregarTabelaProdutos();
   });
 }
-

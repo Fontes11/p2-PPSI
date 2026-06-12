@@ -1,17 +1,17 @@
-export function pageLogin() {
+export function paginaLogin() {
   return `
-  <div class="auth-wrap">
-    <div class="auth-card">
+  <div class="area-auth">
+    <div class="cartao-auth">
       <h1>Bem-vindo de volta</h1>
-      <p class="subtitle">Entre na sua conta</p>
-      <form id="form-login">
-        <div class="fg"><label>Usuário ou e-mail</label>
+      <p class="subtitulo">Entre na sua conta</p>
+      <form id="formulario-login">
+        <div class="grupo-campo"><label>Usuário ou e-mail</label>
           <input type="text" name="email" placeholder="seu@email.com ou admin" required /></div>
-        <div class="fg"><label>Senha</label>
+        <div class="grupo-campo"><label>Senha</label>
           <input type="password" name="senha" placeholder="••••••••" required /></div>
-        <button type="submit" class="btn btn-primary" id="btn-login">Entrar</button>
+        <button type="submit" class="btn btn-primario" id="botao-login">Entrar</button>
       </form>
-      <div class="auth-switch">Não tem conta? <a data-nav="register">Cadastre-se</a></div>
+      <div class="alternar-auth">Não tem conta? <a data-nav="cadastro">Cadastre-se</a></div>
     </div>
   </div>`;
 }

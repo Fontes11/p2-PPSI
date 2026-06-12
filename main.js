@@ -1,14 +1,14 @@
-import { State } from './js/state.js';
-import { render } from './js/router.js';
+import { Estado } from './js/state.js';
+import { renderizar } from './js/router.js';
 
-(function seedAdmin() {
-  const exists = State.users.some(u => u.email === 'admin');
-  if (!exists) {
-    State.users.unshift({ id: 1, nome: 'Administrador', email: 'admin', senha: 'admin', role: 'admin' });
-    State.saveUsers();
+(function popularAdminPadrao() {
+  const existe = Estado.usuarios.some(u => u.email === 'admin');
+  if (!existe) {
+    Estado.usuarios.unshift({ id: 1, nome: 'Administrador', email: 'admin', senha: 'admin', role: 'admin' });
+    Estado.salvarUsuarios();
   }
 })();
 
-State.restore();
-history.replaceState({ page: State.page, selectedProductId: State.selectedProductId }, '', `#${State.page}`);
-render();
+Estado.restaurar();
+history.replaceState({ pagina: Estado.pagina, idProdutoSelecionado: Estado.idProdutoSelecionado }, '', `#${Estado.pagina}`);
+renderizar();
