@@ -1,4 +1,7 @@
 # E-Compras
+## link para video sobre o site
+
+https://youtu.be/zSsH-XDYedQ?is=QbHWbWETt8t2sKAU
 
 E-commerce simples desenvolvido em **JavaScript puro (vanilla)**, sem frameworks com foco em consumo de API e uso do CRUD
 
