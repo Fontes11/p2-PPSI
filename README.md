@@ -1,6 +1,8 @@
 # E-Compras
 ## link para video sobre o site
 
+post no linkedin https://www.linkedin.com/posts/gabrielfontessantos_p2-ppsi-share-7471227136054382592-HEVX/?utm_source=share&utm_medium=member_desktop&rcm=ACoAADPBvY8BEgOpJS5Pfc4E9pVegRTsbwimvig
+
 https://youtu.be/zSsH-XDYedQ?is=QbHWbWETt8t2sKAU
 
 E-commerce simples desenvolvido em **JavaScript puro (vanilla)**, sem frameworks com foco em consumo de API e uso do CRUD
